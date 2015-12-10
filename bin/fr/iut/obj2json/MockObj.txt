@@ -1,0 +1,37 @@
+{
+ "booleanValue": false,
+ "intValue": 0,
+ "byteValue": 0,
+ "charValue": \0,
+ "shortValue": 0,
+ "longValue": 0,
+ "floatValue": 0.0,
+ "dblValue": 0.0,
+ "booleanValues": [true, false],
+ "intValues": [1, 2],
+ "byteValues": [1, 2],
+ "charValues": [a, b],
+ "shortValues": [1, 2],
+ "longValues": [1, 2],
+ "floatValues": [1.0, 2.0],
+ "dblValues": [1.0, 2.0],
+ "subObjs": [ 
+ { 
+  "intField": 1,
+  "doubleField": 1.5,
+   },
+ { 
+  "intField": 1,
+  "doubleField": 1.5,
+   },
+ { 
+ null
+ ],
+  "subObj": {
+  "intField": 1,
+  "doubleField": 1.5,
+ },
+ "date": null,
+ "string": test str,
+ "clss": class java.lang.StringBuilder,
+}

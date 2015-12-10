@@ -1,5 +1,4 @@
 package fr.iut.obj2json;
-import static java.lang.System.out;
 
 import java.awt.Window.Type;
 import java.lang.reflect.Array;
@@ -16,8 +15,6 @@ public class Obj2JSonConverter {
 
 	public static void main(String[] args) throws IllegalArgumentException, IllegalAccessException 
 	{
-		MockObj mObj = new MockObj();
-		convertObject(mObj);
 	}
 	
 	public static String convertObject(Object obj) throws IllegalArgumentException, IllegalAccessException {
@@ -30,17 +27,18 @@ public class Obj2JSonConverter {
     protected void convertAny(Object obj) throws IllegalArgumentException, IllegalAccessException {
     	Class c = obj.getClass();
     	Field[] fields = c.getDeclaredFields();
-
-    	convertObject(obj,c);
+    	outs.append("{");
+    	outs.append("\n");
 		convertPrimitive(obj, c);
 		convertArray(obj, c);
-		convertArrayPrimitive(obj,c);
+    	convertObject(obj,c);
+		//convertArrayPrimitive(obj,c);
+		outs.append("}");
 
 
     }
 
     private void convertObject(Object obj, Class<?> clss) throws IllegalArgumentException, IllegalAccessException {
-    	System.out.println("---------------------------------");
      	Class<?> SupC = clss.getSuperclass();
     	Field[] field = clss.getDeclaredFields();
     	for (Field field2 : field) {
@@ -49,24 +47,40 @@ public class Obj2JSonConverter {
     		else if (field2.getType().isArray()){}
     		else if(field2.getType().isAssignableFrom(Class.class))
     		{
-    			System.out.println("[OBJECT]: "+ field2.getName());
+    	    	indentLevel = 1;
+	        	printIndent();
+    			outs.append("\"" +field2.getName()+"\"" +": ");
+    			outs.append(field2.get(obj));
+            	outs.append(",\n");
 			}else if(field2.getType().isAssignableFrom(Date.class))
 			{
-				System.out.println("[OBJECT]: "+ field2.getName());
+		    	indentLevel = 1;
+	        	printIndent();
+    			outs.append("\"" +field2.getName()+"\"" +": ");
+    			outs.append(field2.get(obj));
+            	outs.append(",\n");
 			}else if(field2.getType().isAssignableFrom(String.class))
 			{
-				System.out.println("[OBJECT]: "+ field2.getName());
+		    	indentLevel = 1;
+	        	printIndent();
+    			outs.append("\"" +field2.getName()+"\"" +": ");
+    			outs.append(field2.get(obj));
+            	outs.append(",\n");
 			}
 			else
 			{
-				System.out.println("[OBJECT]: "+ field2.getName()+"  " + field2.getType());
+	        	printIndent();
+    			outs.append("\"" +field2.getName()+"\"" +": {");
+            	outs.append("\n");
 				convertObjectFields(obj, field2.get(obj).getClass());
+	        	outs.append(" },");
+            	outs.append("\n");
 			}
     	}
     }
 
     private void convertObjectFields(Object obj, Class<?> clss) throws IllegalArgumentException, IllegalAccessException {
-    
+    	indentLevel = 2;
     	if (clss != Object.class) {
             Class<?> superClss = clss.getSuperclass();
             // recurse super class fields
@@ -75,22 +89,28 @@ public class Obj2JSonConverter {
         Field[] fields = clss.getDeclaredFields();
         for (Field field : fields) {
         	field.setAccessible(true);
-            System.out.println("[-- "+field.getName()+"[PRIMITIVE]"+": "+field.get(new SubObj()));
-        	out.append(",\n");
+        	printIndent();
+        	outs.append("\"" +field.getName()+"\"" +": "+field.get(new SubObj()));
+        	outs.append(",\n");
 		}
 
     }
 
-    private void convertPrimitive(Object obj, Class<?> clss) throws IllegalArgumentException, IllegalAccessException {
-    	System.out.println("------PRIMITIVE-------");    	Field[] field = clss.getDeclaredFields();
+    private void convertPrimitive(Object obj, Class<?> clss) throws IllegalArgumentException, IllegalAccessException {    	Field[] field = clss.getDeclaredFields();
     	for (Field field2 : field) {
     		field2.setAccessible(true);
     		if (field2.getType().isPrimitive()) {
     			if (field2.getType()== Character.TYPE) {
-					System.out.println("[PRIMITIVE]: "+ field2.getName() + " " + escapeChar((char) field2.get(obj)));
+    		    	indentLevel = 1;
+    		    	printIndent();
+    				outs.append("\"" +field2.getName()+"\""  + ": " + escapeChar((char) field2.get(obj)));
+    	        	outs.append(",\n");
 				}else
-				{		
-	    			System.out.println("[PRIMITIVE]: "+ field2.getName() + " " + field2.get(obj));
+				{	
+    		    	indentLevel = 1;
+    		    	printIndent();
+					outs.append("\"" +field2.getName()+"\"" + ": " + field2.get(obj));
+    	        	outs.append(",\n");
 				}
     		}
 
@@ -98,7 +118,6 @@ public class Obj2JSonConverter {
     }
 
     private void convertArray(Object obj, Class<?> clss) throws IllegalArgumentException, IllegalAccessException {
-    	System.out.println("------ARRAY-------");
     	Field[] field = clss.getDeclaredFields();
     	for (Field field2 : field) {
     		field2.setAccessible(true);
@@ -107,36 +126,54 @@ public class Obj2JSonConverter {
         		Object array = field2.get(obj); 
         		int length = Array.getLength(array);
         	    Class cType = field2.getType().getComponentType();
-        		System.out.print("[ARRAY] "+field2.getName()+ ": [");
-        		System.out.print("");
+		    	indentLevel = 1;
+		    	printIndent();
+				outs.append("\"" +field2.getName()+"\""+": ");
+    			int b = 0,c = 0;
         		for (int i = 0; i < length; i++) {
+
         			Object element;
 					element = Array.get(array, i);
         			if (!cType.isPrimitive()) {
+
         				if(element != null)
         				{
-        					System.out.println("\n [SUB CLASS]");
-        					convertObjectFields(obj, element.getClass());
+        					if(c==0){outs.append("[ ");c++;}
+	    		        	outs.append("\n { \n");
+	    					convertObjectFields(obj, element.getClass());
+	    			    	printIndent();
+	    					outs.append(" },");
+
         				}
         				else
         				{
-        					System.out.println("\n [SUB CLASS]");
-        					System.out.print("[-- null");
+        		        	outs.append("\n { \n");
+        					outs.append(" null");
+        					outs.append("\n ],\n");
         				}
         			}
         			else{
+        				if(b == 0)
+        				{
+	        				outs.append("["+element +"," );
+	        	        	outs.append(" ");
+	        	        	b++;
+        				}else
+        					outs.append(element);
 
-					System.out.print("," + element);
         			}
         		}
-    		    System.out.println("],");
+        		if(b==1)
+        		{
+        			outs.append("],\n");
+        		}
         	}
 		}
 
     }
 
     private void convertArrayPrimitive(Object obj, Class<?> eltClss) throws IllegalArgumentException, IllegalAccessException {
-    	System.out.println("------ARRAYPRIMITIVE-------");
+    	//System.out.println("------ARRAYPRIMITIVE-------");
     	Field[] field = eltClss.getDeclaredFields();
     	for (Field field2 : field) {
     		field2.setAccessible(true);
@@ -149,15 +186,12 @@ public class Obj2JSonConverter {
         	    {
 	    			Object arrayVal = field2.get(obj);
 	    			int length = Array.getLength(arrayVal);
-	    			System.out.print("[ARRAYPRIMITIVE] "+field2.getName()+ ": [");
-	    		    System.out.print("");
 	    			for (int i = 0; i < length; i++)
 	    			{
 	    			    Object element = Array.get(arrayVal, i);
-	    				System.out.print("," + element );
+		    			outs.append(element);
 	    				
 	    			}
-	    		    System.out.println("],");
 	    		}
     		}
 		}
@@ -174,7 +208,7 @@ public class Obj2JSonConverter {
 
     private void printIndent() {
         for(int i = 0; i < indentLevel; i++) {
-            out.append(" ");
+            outs.append(" ");
         }
     }
     
