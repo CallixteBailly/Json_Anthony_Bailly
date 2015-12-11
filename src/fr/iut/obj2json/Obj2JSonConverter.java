@@ -67,15 +67,6 @@ public class Obj2JSonConverter {
     			outs.append(field2.get(obj));
             	outs.append(",\n");
 			}
-			else
-			{
-	        	printIndent();
-    			outs.append("\"" +field2.getName()+"\"" +": {");
-            	outs.append("\n");
-				convertObjectFields(obj, field2.get(obj).getClass());
-	        	outs.append(" },");
-            	outs.append("\n");
-			}
     	}
     }
 
@@ -96,7 +87,8 @@ public class Obj2JSonConverter {
 
     }
 
-    private void convertPrimitive(Object obj, Class<?> clss) throws IllegalArgumentException, IllegalAccessException {    	Field[] field = clss.getDeclaredFields();
+    private void convertPrimitive(Object obj, Class<?> clss) throws IllegalArgumentException, IllegalAccessException {
+    	Field[] field = clss.getDeclaredFields();
     	for (Field field2 : field) {
     		field2.setAccessible(true);
     		if (field2.getType().isPrimitive()) {
@@ -113,6 +105,15 @@ public class Obj2JSonConverter {
     	        	outs.append(",\n");
 				}
     		}
+    		else if(field2.getType().isAssignableFrom(SubObj.class))
+			{
+	        	printIndent();
+    			outs.append("\"" +field2.getName()+"\"" +": {");
+            	outs.append("\n");
+				convertObjectFields(obj, field2.get(obj).getClass());
+	        	outs.append("},");
+            	outs.append("\n");
+			}
 
 		}
     }
